@@ -209,3 +209,13 @@ __marimo__/
 # Toml
 .streamlit/
 *.toml
+
+# Mac DS_Store
+.DS_Store
+
+# Idea
+.idea
+.idea/
+
+# FAISS
+faiss_index/

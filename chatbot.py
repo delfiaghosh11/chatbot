@@ -22,9 +22,9 @@ credentials = service_account.Credentials.from_service_account_info(service_acco
 client = storage.Client(credentials=credentials, project=service_account_info["project_id"])
 
 # Example usage (list buckets)
-buckets = list(client.list_buckets())
-st.write("Loaded secret keys:", list(service_account_info.keys()))
-st.write("Buckets:", buckets)
+# buckets = list(client.list_buckets())
+# st.write("Loaded secret keys:", list(service_account_info.keys()))
+# st.write("Buckets:", buckets)
 
 # credentials, project_id = google.auth.default()
 
@@ -52,8 +52,8 @@ if file is not None:
     # Break it into chunks
     text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n"],
-        chunk_size=500,
-        chunk_overlap=500,
+        chunk_size=1000,
+        chunk_overlap=1000,
         length_function=len,
     )
     chunks = text_splitter.split_text(text)
@@ -78,7 +78,7 @@ if file is not None:
         vector_store = FAISS.from_texts(texts=chunks, embedding=embeddings)
 
         # Save the vector store locally with the name "faiss_index"
-        vector_store.save_local("faiss_index")
+        # vector_store.save_local("faiss_index")
 
         # Get user's questions
         user_question = st.text_input("Type your question here")
@@ -107,7 +107,7 @@ if file is not None:
 
             # Define LLM
             # temperature value is used to define if we want the llm to generate random answers or, be specific
-            llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, max_tokens=1000)
+            llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, max_tokens=1000, timeout=None)
 
             # Create a prompt template with input variables "context" and "question"
             prompt = PromptTemplate(
