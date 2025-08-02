@@ -1,0 +1,10 @@
+streamlit
+PyPDF2
+langchain
+langchain_community
+langchain_google_genai
+google
+google-auth
+google-generativeai
+google-oauth
+google-cloud-storage
