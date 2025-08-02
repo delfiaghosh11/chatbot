@@ -35,7 +35,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # genai.configure(api_key=GEMINI_API_KEY)
 
 # Upload PDF files
-st.header("Chatbot")
+st.header("Chatterly")
 
 with st.sidebar:
     st.title("Documents")
