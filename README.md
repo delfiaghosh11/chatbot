@@ -42,7 +42,7 @@
 
 ```bash
 # Clone the repository
-git clone [https://github.com/delfiaghosh11/chatterly.git](https://github.com/delfiaghosh11/chatterly.git)
+git clone https://github.com/delfiaghosh11/chatterly.git
 cd chatterly
 
 # Install dependencies

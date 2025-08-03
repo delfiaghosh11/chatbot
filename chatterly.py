@@ -21,15 +21,19 @@ credentials = service_account.Credentials.from_service_account_info(service_acco
 # Initialize client with explicit credentials
 client = storage.Client(credentials=credentials, project=service_account_info["project_id"])
 
+# Get GEMINI_API_KEY
+gemini_api_key = service_account_info["gemini_api_key"]
+
 # Example usage (list buckets)
 # buckets = list(client.list_buckets())
-# st.write("Loaded secret keys:", list(service_account_info.keys()))
+st.write("Loaded secret keys:", list(service_account_info.keys()))
 # st.write("Buckets:", buckets)
+st.write(gemini_api_key)
 
 # credentials, project_id = google.auth.default()
 
 # Option 1: Using environment variable (recommended)
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=gemini_api_key)
 
 # Option 2: Passing API key directly (less secure for production)
 # genai.configure(api_key=GEMINI_API_KEY)
