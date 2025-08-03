@@ -43,7 +43,7 @@ def get_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks, batch_size=50):
+def get_vector_store(text_chunks, batch_size=10):
     # Create embeddings using a Google Generative AI model
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
@@ -97,7 +97,7 @@ def get_conversational_chain():
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-pro",
         temperature=0,
-        max_tokens=2000,
+        max_tokens=500,
         timeout=120,
         max_retries=3,
     )
