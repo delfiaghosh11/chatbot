@@ -42,14 +42,14 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/delfiaghosh11/chatbot.git
-cd chatbot
+git clone [https://github.com/delfiaghosh11/chatterly.git](https://github.com/delfiaghosh11/chatterly.git)
+cd chatterly
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Start the app
-python3 -m streamlit run /path/to/chatbot/chatbot.py
+python3 -m streamlit run /path/to/chatterly/chatterly.py
 ```
 
 ---
