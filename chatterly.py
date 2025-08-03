@@ -39,90 +39,84 @@ genai.configure(api_key=gemini_api_key)
 # Option 2: Passing API key directly (less secure for production)
 # genai.configure(api_key=GEMINI_API_KEY)
 
-# Upload PDF files
-st.header("Chatterly")
-
-with st.sidebar:
-    st.title("Documents")
-    file = st.file_uploader("Choose a PDF file", type=["pdf"])
-
 # Extract the text
-if file is not None:
+def get_pdf_text(file):
     pdf_reader = PdfReader(file)
     text = ""
     for page in pdf_reader.pages:
         text += page.extract_text()
-        # st.write(text)
+    return text
 
-    # Break it into chunks
+# Break it into chunks
+def get_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n"],
         chunk_size=500,
         # chunk_overlap=1000,
-        length_function=len,
+        # length_function=len,
     )
-    with st.spinner("Chunking...", show_time=False):
-        time.sleep(5)
     chunks = text_splitter.split_text(text)
-    # st.write(chunks)
+    return chunks
 
-    # Generate Embeddings
-    # If no event loop is present, set one
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+def get_vector_store(text_chunks):
+    # Create embeddings using a Google Generative AI model
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-        with st.spinner("Embedding...", show_time=False):
-            time.sleep(5)
-        embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", task_type="retrieval_document")
+    # Create a vector store using FAISS from the provided text chunks and embeddings
+    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
 
-        # Create Vector Store
-        # 1. Generating Embeddings
-        # 2. Initializing the FAISS dB
-        # 3. Storing the chunks & embeddings in the dB
+    # Save the vector store locally with the name "faiss_index"
+    # vector_store.save_local("faiss_index")
 
-        # Create a vector store using FAISS from the provided text chunks and embeddings
-        with st.spinner("Storing...", show_time=False):
-            time.sleep(5)
-        vector_store = FAISS.from_texts(texts=chunks, embedding=embeddings)
+    return vector_store
 
-        # Save the vector store locally with the name "faiss_index"
-        # vector_store.save_local("faiss_index")
+def get_conversational_chain():
+    # Initialize a ChatGoogleGenerativeAI model for conversational AI
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-pro",
+        temperature=0,
+        max_tokens=2000,
+        timeout=120,
+        max_retries=3,
+    )
 
-        # Get user's questions
-        user_question = st.text_input("Type your question here")
+    # Load a question-answering chain with the specified model and prompt
+    chain = load_qa_chain(llm=llm, chain_type="stuff")
 
-        # Do similarity search on it
-        if user_question:
-            with st.spinner("Searching...", show_time=False):
-                time.sleep(5)
-            match = vector_store.similarity_search(user_question)
-            # st.write(match)
+    return chain
 
-            # Output the results
-            # 1. Chain
-            # 2. Take question
-            # 3. Get relevant document
-            # 4. Pass it to the LLM
-            # 5. Generate the output
+def user_input(user_question, vector_store):
+    # Perform similarity search in the vector database based on the user question
+    match = vector_store.similarity_search(user_question)
 
-            # Define LLM
-            # temperature value is used to define if we want the llm to generate random answers or, be specific
-            with st.spinner("Almost there!", show_time=False):
-                time.sleep(5)
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro",
-                temperature=0,
-                max_tokens=2000,
-                timeout=120,
-                max_retries=3,
-            )
+    # Obtain a conversational question-answering chain
+    chain = get_conversational_chain()
 
-            # Output the result
-            with st.spinner("Almost there!", show_time=False):
-                time.sleep(5)
-            chain = load_qa_chain(llm, chain_type="stuff")
-            response = chain.run(input_documents=match, question=user_question)
-            st.write(response)
+    # Use the conversational chain to get a response based on the user question and retrieved documents
+    response = chain.run(input_documents=match, question=user_question)
+
+    # Display the response in a Streamlit app (assuming 'st' is a Streamlit module)
+    st.write("Reply: ", response["output_text"])
+
+def main():
+    st.set_page_config("Chatterly")
+    # Upload PDF files
+    st.header("Chatterly")
+
+    with st.sidebar:
+        st.title("Document")
+        file = st.file_uploader("Choose a PDF file", type=["pdf"])
+
+    if file is not None:
+        with st.spinner("Processing..."):
+            raw_text = get_pdf_text(file)
+            text_chunks = get_chunks(raw_text)
+            vector_store = get_vector_store(text_chunks)
+
+            user_question = st.text_input("Type your question here")
+
+            if user_question:
+                user_input(user_question, vector_store)
+
+if __name__ == "__main__":
+    main()

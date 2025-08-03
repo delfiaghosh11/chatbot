@@ -8,3 +8,5 @@ google-auth
 google-generativeai
 google-oauth
 google-cloud-storage
+faiss-cpu
+chromadb
