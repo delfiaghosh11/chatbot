@@ -11,6 +11,7 @@ import asyncio
 import google.auth
 from google.oauth2 import service_account
 from google.cloud import storage
+import time
 
 # Load service account info from secrets
 service_account_info = st.secrets["gcp_service_account"]
@@ -26,9 +27,9 @@ gemini_api_key = service_account_info["gemini_api_key"]
 
 # Example usage (list buckets)
 # buckets = list(client.list_buckets())
-st.write("Loaded secret keys:", list(service_account_info.keys()))
+# st.write("Loaded secret keys:", list(service_account_info.keys()))
 # st.write("Buckets:", buckets)
-st.write(gemini_api_key)
+# st.write(gemini_api_key)
 
 # credentials, project_id = google.auth.default()
 
@@ -56,10 +57,12 @@ if file is not None:
     # Break it into chunks
     text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n"],
-        chunk_size=1000,
-        chunk_overlap=1000,
+        chunk_size=500,
+        # chunk_overlap=1000,
         length_function=len,
     )
+    with st.spinner("Chunking...", show_time=False):
+        time.sleep(5)
     chunks = text_splitter.split_text(text)
     # st.write(chunks)
 
@@ -71,6 +74,8 @@ if file is not None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+        with st.spinner("Embedding...", show_time=False):
+            time.sleep(5)
         embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
         # Create Vector Store
@@ -79,6 +84,8 @@ if file is not None:
         # 3. Storing the chunks & embeddings in the dB
 
         # Create a vector store using FAISS from the provided text chunks and embeddings
+        with st.spinner("Storing...", show_time=False):
+            time.sleep(5)
         vector_store = FAISS.from_texts(texts=chunks, embedding=embeddings)
 
         # Save the vector store locally with the name "faiss_index"
@@ -89,6 +96,8 @@ if file is not None:
 
         # Do similarity search on it
         if user_question:
+            with st.spinner("Searching...", show_time=False):
+                time.sleep(5)
             match = vector_store.similarity_search(user_question)
             # st.write(match)
 
@@ -111,7 +120,7 @@ if file is not None:
 
             # Define LLM
             # temperature value is used to define if we want the llm to generate random answers or, be specific
-            llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, max_tokens=1000, timeout=None)
+            llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, max_tokens=2000, timeout=None)
 
             # Create a prompt template with input variables "context" and "question"
             prompt = PromptTemplate(
@@ -120,5 +129,7 @@ if file is not None:
 
             # Output the result
             chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
+            with st.spinner("Almost there!", show_time=False):
+                time.sleep(5)
             response = chain.run(input_documents=match, question=user_question)
             st.write(response)
