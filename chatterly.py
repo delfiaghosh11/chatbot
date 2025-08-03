@@ -4,14 +4,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import  load_qa_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
 import google.generativeai as genai
-import os
-import asyncio
-import google.auth
 from google.oauth2 import service_account
 from google.cloud import storage
-import time
 
 # Load service account info from secrets
 service_account_info = st.secrets["gcp_service_account"]
@@ -25,19 +20,8 @@ client = storage.Client(credentials=credentials, project=service_account_info["p
 # Get GEMINI_API_KEY
 gemini_api_key = service_account_info["gemini_api_key"]
 
-# Example usage (list buckets)
-# buckets = list(client.list_buckets())
-# st.write("Loaded secret keys:", list(service_account_info.keys()))
-# st.write("Buckets:", buckets)
-# st.write(gemini_api_key)
-
-# credentials, project_id = google.auth.default()
-
 # Option 1: Using environment variable (recommended)
 genai.configure(api_key=gemini_api_key)
-
-# Option 2: Passing API key directly (less secure for production)
-# genai.configure(api_key=GEMINI_API_KEY)
 
 # Extract the text
 def get_pdf_text(file):
