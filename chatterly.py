@@ -51,7 +51,7 @@ def get_pdf_text(file):
 def get_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n"],
-        chunk_size=500,
+        chunk_size=100,
         # chunk_overlap=1000,
         # length_function=len,
     )
@@ -60,7 +60,7 @@ def get_chunks(text):
 
 def get_vector_store(text_chunks):
     # Create embeddings using a Google Generative AI model
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", request_options={"timeout": 120},)
 
     # Create a vector store using FAISS from the provided text chunks and embeddings
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
