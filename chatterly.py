@@ -76,19 +76,7 @@ if file is not None:
 
         with st.spinner("Embedding...", show_time=False):
             time.sleep(5)
-        embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
-        for attempt in range(1, 6):
-            try:
-                with st.spinner("Embedding...", show_time=False):
-                    time.sleep(5)
-                embeddings.embed_documents(chunks)
-            except RuntimeError as e:
-                if "504 Deadline Exceeded" in str(e):
-                    wait = 2 ** (attempt - 1)
-                    with st.spinner(f"Timeout, attempt {attempt}, retrying in {wait}s", show_time=False):
-                        time.sleep(wait)
-                else:
-                    raise RuntimeError("All retries failed: too many DeadlineExceeded errors.")
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", task_type="retrieval_document")
 
         # Create Vector Store
         # 1. Generating Embeddings
@@ -120,16 +108,6 @@ if file is not None:
             # 4. Pass it to the LLM
             # 5. Generate the output
 
-            # Define a prompt template for asking questions based on a given context
-            prompt_template = """
-                Answer the question as detailed as possible from the provided context, make sure to provide all the details,
-                if the answer is not in the provided context just say, "answer is not available in the context", don't provide the wrong answer\n\n
-                Context:\n {context}?\n
-                Question: \n{question}\n
-    
-                Answer:
-                """
-
             # Define LLM
             # temperature value is used to define if we want the llm to generate random answers or, be specific
             with st.spinner("Almost there!", show_time=False):
@@ -139,19 +117,12 @@ if file is not None:
                 temperature=0,
                 max_tokens=2000,
                 timeout=120,
-                max_retries=3
-            )
-
-            # Create a prompt template with input variables "context" and "question"
-            with st.spinner("Almost there!", show_time=False):
-                time.sleep(5)
-            prompt = PromptTemplate(
-                template=prompt_template, input_variables=["context", "question"]
+                max_retries=3,
             )
 
             # Output the result
             with st.spinner("Almost there!", show_time=False):
                 time.sleep(5)
-            chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
+            chain = load_qa_chain(llm, chain_type="stuff")
             response = chain.run(input_documents=match, question=user_question)
             st.write(response)
