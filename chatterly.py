@@ -1,7 +1,7 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from google.api_core.retry import Retry
 from langchain.chains.question_answering import  load_qa_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
@@ -47,11 +47,9 @@ def get_vector_store(text_chunks, batch_size=50):
     # Create embeddings using a Google Generative AI model
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
-        request_options={"timeout": 30},
+        request_options={"timeout": 120},
         transport="rest"
     )
-
-    retry_strategy = Retry(initial=1.0, maximum=10.0, multiplier=2.0, deadline=90.0)
 
     ids: list[str] = []
     text_to_embed: list[str] = []
@@ -71,7 +69,6 @@ def get_vector_store(text_chunks, batch_size=50):
             batch,
             batch_size=len(batch),
             task_type="retrieval_document",
-            request_options={"retry": retry_strategy},
         )
         embeddings_list.extend(vs)
 
