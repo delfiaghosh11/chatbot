@@ -76,7 +76,7 @@ if file is not None:
 
         with st.spinner("Embedding...", show_time=False):
             time.sleep(5)
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", task_type="retrieval_document")
+        embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", task_type="retrieval_document")
 
         # Create Vector Store
         # 1. Generating Embeddings
