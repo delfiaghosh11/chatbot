@@ -120,7 +120,13 @@ if file is not None:
 
             # Define LLM
             # temperature value is used to define if we want the llm to generate random answers or, be specific
-            llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, max_tokens=2000, timeout=None)
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-2.5-pro",
+                temperature=0,
+                max_tokens=2000,
+                timeout=120,
+                max_retries=3
+            )
 
             # Create a prompt template with input variables "context" and "question"
             prompt = PromptTemplate(
