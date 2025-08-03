@@ -1,7 +1,8 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+from langchain.vectorstores import FAISS
+from google.api_core.retry import Retry
 from langchain.chains.question_answering import  load_qa_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
@@ -42,17 +43,57 @@ def get_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks):
+def get_vector_store(text_chunks, batch_size=50):
     # Create embeddings using a Google Generative AI model
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", request_options={"timeout": 120},)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001",
+        request_options={"timeout": 30},
+        transport="rest"
+    )
+
+    retry_strategy = Retry(initial=1.0, maximum=10.0, multiplier=2.0, deadline=90.0)
+
+    ids: list[str] = []
+    text_to_embed: list[str] = []
+    metadatas: list[dict] = []
+
+    # Track mapping of chunk index → ID string
+    for i, chunk in enumerate(text_chunks):
+        ids.append(str(i))  # or use a UUID
+        text_to_embed.append(chunk)
+        metadatas.append({"chunk_index": i})
+
+    # Batch compute embeddings
+    embeddings_list: list[list[float]] = []
+    for i in range(0, len(text_to_embed), batch_size):
+        batch = text_to_embed[i: i + batch_size]
+        vs = embeddings.embed_documents(
+            batch,
+            batch_size=len(batch),
+            task_type="retrieval_document",
+            request_options={"retry": retry_strategy},
+        )
+        embeddings_list.extend(vs)
+
+    # Prepare (text, vector) pairs
+    text_embeddings = list(zip(text_to_embed, embeddings_list))
+
+    # Construct FAISS index with provided IDs, metadata
+    faiss_index = FAISS.from_embeddings(
+        text_embeddings,
+        embedding=embeddings,
+        metadatas=metadatas,
+        ids=ids,
+    )
+    return faiss_index
 
     # Create a vector store using FAISS from the provided text chunks and embeddings
-    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
+    # vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
 
     # Save the vector store locally with the name "faiss_index"
     # vector_store.save_local("faiss_index")
 
-    return vector_store
+    # return vector_store
 
 def get_conversational_chain():
     # Initialize a ChatGoogleGenerativeAI model for conversational AI
