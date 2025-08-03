@@ -76,7 +76,19 @@ if file is not None:
 
         with st.spinner("Embedding...", show_time=False):
             time.sleep(5)
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
+        for attempt in range(1, 6):
+            try:
+                with st.spinner("Embedding...", show_time=False):
+                    time.sleep(5)
+                embeddings.embed_documents(chunks)
+            except RuntimeError as e:
+                if "504 Deadline Exceeded" in str(e):
+                    wait = 2 ** (attempt - 1)
+                    with st.spinner(f"Timeout, attempt {attempt}, retrying in {wait}s", show_time=False):
+                        time.sleep(wait)
+                else:
+                    raise RuntimeError("All retries failed: too many DeadlineExceeded errors.")
 
         # Create Vector Store
         # 1. Generating Embeddings
@@ -120,6 +132,8 @@ if file is not None:
 
             # Define LLM
             # temperature value is used to define if we want the llm to generate random answers or, be specific
+            with st.spinner("Almost there!", show_time=False):
+                time.sleep(5)
             llm = ChatGoogleGenerativeAI(
                 model="gemini-2.5-pro",
                 temperature=0,
@@ -129,13 +143,15 @@ if file is not None:
             )
 
             # Create a prompt template with input variables "context" and "question"
+            with st.spinner("Almost there!", show_time=False):
+                time.sleep(5)
             prompt = PromptTemplate(
                 template=prompt_template, input_variables=["context", "question"]
             )
 
             # Output the result
-            chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
             with st.spinner("Almost there!", show_time=False):
                 time.sleep(5)
+            chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
             response = chain.run(input_documents=match, question=user_question)
             st.write(response)
